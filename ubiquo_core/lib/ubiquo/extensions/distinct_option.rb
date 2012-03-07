@@ -22,7 +22,7 @@ module Ubiquo
 
       # Applies the :distinct option when constructing sql queries
       def apply_finder_options_with_distinct(options)
-        if options[:distinct]
+        if options[:distinct] && !self.using_distinct
           options_with_distinct = options.merge(:select => select_distinct(options))
           self.using_distinct = true
         end
@@ -46,6 +46,7 @@ module Ubiquo
       def select_distinct(options)
         select_in_scope_attributes = select_values.join if select_values.present?
         rails_select = options[:select] || select_in_scope_attributes || default_select
+        return rails_select if rails_select =~ /DISTINCT/
 
         if connection.adapter_name == 'PostgreSQL'
           # By default table.id is the distinct on clause.
