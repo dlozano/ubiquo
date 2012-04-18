@@ -1,4 +1,4 @@
-require 'calendar_date_select'
+#require 'calendar_date_select'
 
 module Ubiquo
   module Helpers
@@ -10,6 +10,6 @@ Ubiquo::Extensions::Loader.append_helper(:UbiquoController, Ubiquo::Helpers::Sho
 ActionController::Base.helper(Ubiquo::Helpers::CorePublicHelpers)
 ActionController::Base.helper(Ubiquo::Helpers::RemoteHelpers)
 
-ActionView::Helpers::FormHelper.send(:include, CalendarDateSelect::FormHelpers)
-ActionView::Base.send(:include, CalendarDateSelect::FormHelpers)
-ActionView::Base.send(:include, CalendarDateSelect::IncludesHelper)
+#ActionView::Helpers::FormHelper.send(:include, CalendarDateSelect::FormHelpers)
+#ActionView::Base.send(:include, CalendarDateSelect::FormHelpers)
+#ActionView::Base.send(:include, CalendarDateSelect::IncludesHelper)

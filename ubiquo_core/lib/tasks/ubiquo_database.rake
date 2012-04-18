@@ -94,7 +94,7 @@ namespace :ubiquo do
           tables = Dir.glob(fixture_path('*')).map{ |file| File.basename(file, '.*') } if tables.blank?
 
           # Create fixtures and print result summary
-          fixtures = Fixtures.create_fixtures(fixture_path, tables || [])
+          fixtures = Fixtures.create_fixtures(fixture_path, tables || []) rescue []
 
           # Print results
           # if there is only one kind of fixtures created, create_fixtures returns an array with a missing dimension

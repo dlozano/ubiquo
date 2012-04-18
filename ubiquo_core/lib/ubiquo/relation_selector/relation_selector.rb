@@ -105,8 +105,8 @@ module Ubiquo
       def url_craft_settings class_name, selector_type, options = {}
         related_objects = []
         if options[:collection_url].blank?
-          options[:related_url] = send("new_ubiquo_#{class_name.tableize.singularize}_url")
-          options[:collection_url] = "ubiquo_#{class_name.tableize.pluralize}_url"
+          options[:related_url] = "new_#{class_name.tableize.singularize}_url"
+          options[:collection_url] = "#{class_name.tableize.pluralize}_url"
           if selector_type != :autocomplete
             related_objects = if class_name.constantize.respond_to?(:locale)
               # TODO this should be in a connector
@@ -184,7 +184,7 @@ module Ubiquo
         url_params.merge!(options[:url_params]) if options[:url_params].present?
 
         autocomplete_options = {
-          :url => send(options[:collection_url], url_params),
+          :url => send(:ubiquo).send(options[:collection_url], url_params),
           :current_values => open_struct_from_model(
             object.send(key),
             options[:related_object_id_field] || 'id',

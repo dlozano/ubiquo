@@ -13,7 +13,7 @@ module Ubiquo
           text += "<span class= #{span_class} > * </span>".html_safe
         end
         options.delete("append_asterisk")
-        label_tag_without_asterisk(name, text, options)
+        label_tag_without_asterisk(name, text.html_safe, options).html_safe
       end
     end
   end
