@@ -1,7 +1,8 @@
 require File.dirname(__FILE__) + '/../../test_helper'
 
 class Ubiquo::CategorySetsControllerTest < ActionController::TestCase
-  use_ubiquo_fixtures
+  fixtures :all
+
   def test_should_get_index
     get :index
     assert_response :success
@@ -17,7 +18,7 @@ class Ubiquo::CategorySetsControllerTest < ActionController::TestCase
   end
 
   def test_should_not_see_actions_if_set_isnt_editable
-    Ubiquo::Config.context(:ubiquo_categories).set(:administrable_category_sets, true)    
+    Ubiquo::Config.context(:ubiquo_categories).set(:administrable_category_sets, true)
     set_attrs = category_set_attributes.merge(:is_editable => false)
     category_set = CategorySet.create(set_attrs)
     get :index
@@ -30,12 +31,12 @@ class Ubiquo::CategorySetsControllerTest < ActionController::TestCase
     end
     assert_response :success
   end
-  
+
   def test_should_get_new
     get :new
     assert_response :success
   end
-  
+
   def test_should_get_show
     get :show, :id => category_sets(:one).id
     assert_response :success
@@ -46,7 +47,7 @@ class Ubiquo::CategorySetsControllerTest < ActionController::TestCase
       post :create, :category_set => category_set_attributes
     end
 
-    assert_redirected_to ubiquo_category_sets_url
+    assert_redirected_to ubiquo.category_sets_path
   end
 
   def test_should_get_edit
@@ -56,16 +57,16 @@ class Ubiquo::CategorySetsControllerTest < ActionController::TestCase
 
   def test_should_update_category_set
     put :update, :id => category_sets(:one).id, :category_set => category_set_attributes
-    assert_redirected_to ubiquo_category_sets_url
+    assert_redirected_to ubiquo.category_sets_path
   end
 
   def test_should_destroy_category_set
     assert_difference('CategorySet.count', -1) do
       delete :destroy, :id => category_sets(:one).id
     end
-    assert_redirected_to ubiquo_category_sets_url
+    assert_redirected_to ubiquo.category_sets_path
   end
-  
+
   private
 
   def category_set_attributes(options = {})
@@ -73,7 +74,7 @@ class Ubiquo::CategorySetsControllerTest < ActionController::TestCase
       :name => 'MyString', # string
       :key => rand.to_s, # string
     }
-    default_options.merge(options)  
+    default_options.merge(options)
   end
-      
+
 end

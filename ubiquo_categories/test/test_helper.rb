@@ -3,6 +3,7 @@ ENV["RAILS_ENV"] = "test"
 
 require File.expand_path("../dummy/config/environment.rb",  __FILE__)
 require "rails/test_help"
+require 'ruby-debug'
 
 ActionMailer::Base.delivery_method = :test
 ActionMailer::Base.perform_deliveries = true
@@ -22,7 +23,7 @@ def create_categories_test_model_backend
     translatable = table != 'category_test_models'
 
     conn.create_table table, :translatable => translatable do |t|
-      t.string :field
+      t.string :my_field
     end unless conn.tables.include?(table)
 
     Object.const_set(model_name, Class.new(ActiveRecord::Base)) unless Object.const_defined? model_name
@@ -35,6 +36,23 @@ def create_categories_test_model_backend
   Object.const_set("EmptyTestModelSubTwo", Class.new(EmptyTestModelSubOne)) unless Object.const_defined? "EmptyTestModelSubTwo"
 end
 
+def destroy_categories_test_model_backend
+    conn = ActiveRecord::Base.connection
+
+  %w{CategoryTranslatableTestModel CategoryTestModelBase EmptyTestModelBase CategoryTestModel}.each do |model_name|
+    table = model_name.tableize
+    translatable = table != 'category_test_models'
+
+    conn.drop_table table if conn.tables.include?(table)
+
+    Object.send(:remove_const, model_name) if Object.const_defined? model_name
+  end
+
+  %w{ CategoryTestModelSubOne CategoryTestModelSubTwo EmptyTestModelSubOne EmptyTestModelSubTwo}.each do |model_name|
+    Object.send(:remove_const, model_name) if Object.const_defined? model_name
+  end
+end
+
 def categorize attr, options = {}
   CategoryTestModel.class_eval do
     categorized_with attr, options
@@ -43,13 +61,26 @@ end
 
 def validate_presence_of_category attr, options = {}
   CategoryTestModel.class_eval do
-    validates_presence_of attr, :identifier => :category_test_presence
+    validates attr, :presence => true
   end
 end
 def invalidate_presence_of_category attr, options = {}
-  CategoryTestModel.validate.delete_if do |v|
-    v.identifier == :category_test_presence
-  end if CategoryTestModel.validate.respond_to?(:delete_if)
+  callbacks = CategoryTestModel._validate_callbacks
+  callbacks.delete_if do |callback|
+    filter = callback.raw_filter
+    if filter.is_a?(ActiveModel::Validations::PresenceValidator)
+      if callback.raw_filter.attributes.size > 1
+        callback.raw_filter.attributes.delete(attr)
+        false
+      else
+        true
+      end
+    else
+      false
+    end
+
+  end
+  CategoryTestModel._validate_callbacks = callbacks
 end
 
 def categorize_base attr, options = {}
@@ -101,4 +132,9 @@ end
 
 if ActiveRecord::Base.connection.class.to_s == "ActiveRecord::ConnectionAdapters::PostgreSQLAdapter"
   ActiveRecord::Base.connection.client_min_messages = "ERROR"
+end
+
+class ActiveSupport::TestCase
+  include Ubiquo::Engine.routes.url_helpers
+  include Rails.application.routes.mounted_helpers
 end

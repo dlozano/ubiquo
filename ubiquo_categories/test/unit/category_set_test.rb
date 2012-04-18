@@ -1,7 +1,6 @@
 require File.dirname(__FILE__) + '/../test_helper'
 
 class CategorySetTest < ActiveSupport::TestCase
-  use_ubiquo_fixtures
 
   def test_should_create_category_set
     assert_difference 'CategorySet.count' do
@@ -14,16 +13,16 @@ class CategorySetTest < ActiveSupport::TestCase
     assert_difference 'CategorySet.count', 1 do
       category_set = create_category_set :key=> 'my_key'
       category_set = create_category_set :key=> category_set.key
-      assert category_set.errors.on(:key)
+      assert category_set.errors[:key]
       category_set = create_category_set :key=> category_set.key.upcase
-      assert category_set.errors.on(:key)
+      assert category_set.errors[:key]
     end
   end
 
   def test_should_require_name
     assert_no_difference 'CategorySet.count' do
       category_set = create_category_set(:name => "")
-      assert category_set.errors.on(:name)
+      assert category_set.errors[:name]
     end
   end
 
@@ -139,7 +138,7 @@ class CategorySetTest < ActiveSupport::TestCase
     category = Category.last
     assert_equal category, set.select_fittest('cAtEgOrY')
   end
-  
+
   def test_select_fittest_with_category
     set = create_category_set
     set.categories << 'Category'

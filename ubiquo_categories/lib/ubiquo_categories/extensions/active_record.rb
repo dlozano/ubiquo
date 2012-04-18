@@ -57,7 +57,7 @@ module UbiquoCategories
           self.has_many(:"#{field}_category_relations", {
               :as => :related_object,
               :class_name => "::CategoryRelation",
-              :conditions => ["category_relations.attr_name = ?", association_name],
+              :conditions => { :attr_name => association_name }, #["category_relations.attr_name = ?", association_name],
               :dependent => :destroy,
               :order => "category_relations.position ASC"
           })
@@ -79,30 +79,29 @@ module UbiquoCategories
           proc = Proc.new do
 
             define_method "<<" do |categories|
-              set, categories = assign_to_set.call(categories, proxy_owner)
-
+              set, categories = assign_to_set.call(categories, proxy_association.owner)
               categories.each do |category|
                 unless has_category? category.to_s
                   raise UbiquoCategories::LimitError if is_full?
-                  @reflection.through_reflection.klass.create(
+                  proxy_association.reflection.through_reflection.klass.create(
                     :attr_name => association_name,
-                    :related_object => proxy_owner,
+                    :related_object => proxy_association.owner,
                     :category => category
                   )
                 end
               end
-              reset
+              proxy_association.reset
             end
 
             if options[:size] == 1
               # Returns directly the instance if only one category is allowed
               def method_missing(method, *args)
                 if load_target
-                  if @target.first.respond_to?(method)
+                  if target.first.respond_to?(method)
                     if block_given?
-                      @target.first.send(method, *args)  { |*block_args| yield(*block_args) }
+                      target.first.send(method, *args)  { |*block_args| yield(*block_args) }
                     else
-                      @target.first.send(method, *args)
+                      target.first.send(method, *args)
                     end
                   else
                     super
@@ -111,25 +110,21 @@ module UbiquoCategories
               end
             end
 
-            define_method 'to_a' do
-              Array(self)
-            end
-
             define_method 'is_full?' do
-              return false if options[:size].to_sym == :many
-              Array(self).size >= options[:size]
+              return false if options[:size].to_s.to_sym == :many
+              self.size >= options[:size]
             end
 
             define_method 'will_be_full?' do |categories|
-              return false if options[:size].to_sym == :many
+              return false if options[:size].to_s.to_sym == :many
               categories.size > options[:size]
             end
 
             define_method 'has_category?' do |category|
               if category.is_a? Category
-                Array(self).include? category
+                self.include? category
               else
-                Array(self).map(&:to_s).include? category.to_s
+                self.map(&:to_s).include? category.to_s
               end
             end
 
@@ -144,7 +139,6 @@ module UbiquoCategories
               :through => :"#{field}_category_relations",
               :class_name => "::Category",
               :source => :category,
-              :conditions => ["category_relations.attr_name = ?", association_name],
               :order => "category_relations.position ASC",
             },&proc)
 
@@ -155,15 +149,17 @@ module UbiquoCategories
 
             raise UbiquoCategories::LimitError if send(association_name).will_be_full? categories
 
-            CategoryRelation.send(:with_scope, :create => {:attr_name => association_name}) do
-              self.send("#{association_name}_without_categories=", categories)
-            end
-
+            self.send("#{association_name}_without_categories=", categories)
           end
 
-          alias_method_chain "#{association_name}=", 'categories'
+          # If we have already categorized this model we just overwrite the "#{association_name}=" method with "#{association_name}_with_categories=" one.
+          if instance_methods.include?(:"#{association_name}_without_categories=")
+            alias_method "#{association_name}=", "#{association_name}_with_categories="
+          else
+            alias_method_chain "#{association_name}=", 'categories'
+          end
 
-          named_scope "#{association_name}", lambda{ |*values|
+          scope "#{association_name}", lambda{ |*values|
             category_conditions_for field, values
           }
 
@@ -173,7 +169,7 @@ module UbiquoCategories
             alias_method "#{field}=", "#{association_name}="
 
             # alias for the builtin named_scope
-            singleton_class.send :alias_method,  "#{field}", "#{association_name}"
+            singleton_class.send :alias_method, field, association_name
           end
 
           prepare_categories_join_sql field
