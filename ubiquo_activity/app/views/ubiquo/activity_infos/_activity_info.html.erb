@@ -7,7 +7,7 @@
 
   <dt><%= activity_info.class.human_attribute_name(:status) %></dt>
   <dd><%=  t "ubiquo.activity_info.actions.#{activity_info.status}" %></dd>
-
+  
   <% if activity_info.related_object %>
     <dt><%= activity_info.class.human_attribute_name(:related_object) %></dt>
     <dd><%= activity_info.class.name.humanize %>

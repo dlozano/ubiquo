@@ -1,10 +1,14 @@
 module UbiquoActivity
   module StoreActivity
     def self.included klass
-      klass.send :include, InstanceMethods 
+      klass.send :include, InstanceMethods
     end
 
     module InstanceMethods
+      def current_user
+        current_ubiquo_user
+      end
+
       # Creates a ActivityInfo record with:
       #   - status, info, action, controller, related_object and ubiquo_user
       #
